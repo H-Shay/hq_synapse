@@ -80,8 +80,6 @@ from synapse.types import (
     RoomAlias,
     RoomID,
     RoomStreamToken,
-    ShutdownRoomParams,
-    ShutdownRoomResponse,
     StateMap,
     StrCollection,
     StreamKeyType,
@@ -89,6 +87,7 @@ from synapse.types import (
     UserID,
     create_requester,
 )
+from synapse.types.handlers import ShutdownRoomParams, ShutdownRoomResponse
 from synapse.types.state import StateFilter
 from synapse.util import stringutils
 from synapse.util.caches.response_cache import ResponseCache
@@ -1477,7 +1476,6 @@ class RoomContextHandler:
                 user.to_string(),
                 events,
                 is_peeking=is_peeking,
-                msc4115_membership_on_events=self.hs.config.experimental.msc4115_membership_on_events,
             )
 
         event = await self.store.get_event(

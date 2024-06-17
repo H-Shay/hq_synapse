@@ -37,11 +37,10 @@ from synapse.types import (
     JsonMapping,
     Requester,
     ScheduledTask,
-    ShutdownRoomParams,
-    ShutdownRoomResponse,
     StreamKeyType,
     TaskStatus,
 )
+from synapse.types.handlers import ShutdownRoomParams, ShutdownRoomResponse
 from synapse.types.state import StateFilter
 from synapse.util.async_helpers import ReadWriteLock
 from synapse.visibility import filter_events_for_client
@@ -624,7 +623,6 @@ class PaginationHandler:
                 user_id,
                 events,
                 is_peeking=(member_event_id is None),
-                msc4115_membership_on_events=self.hs.config.experimental.msc4115_membership_on_events,
             )
 
         # if after the filter applied there are no more events
