@@ -422,7 +422,7 @@ class MultipartFileConsumer:
         # The producer that registered with us, and if its a push or pull
         # producer.
         self.producer: Optional["interfaces.IProducer"] = None
-        self.streaming = Optional[None]
+        self.streaming: Optional[bool] = None
 
         # Whether the wrapped consumer has asked us to pause.
         self.paused = False
@@ -458,6 +458,9 @@ class MultipartFileConsumer:
         self.streaming = streaming
 
         self.wrapped_consumer.registerProducer(self, True)
+
+        if not streaming:
+            self.resumeProducing()
 
     def unregisterProducer(self) -> None:
         """
