@@ -300,7 +300,6 @@ async def respond_with_multipart_responder(
             )
             return
 
-
         from synapse.media.media_storage import MultipartFileConsumer
 
         multipart_consumer = MultipartFileConsumer(
