@@ -1835,6 +1835,13 @@ database migrations are complete. You should wait until background updates from
 each upgrade are complete before moving on to the next upgrade, to avoid
 stacking them up. You can monitor the currently running background updates with
 <a href="usage/administration/admin_api/background_updates.html#status">the Admin API</a>.</p>
+<h1 id="upgrading-to-v11110"><a class="header" href="#upgrading-to-v11110">Upgrading to v1.111.0</a></h1>
+<h2 id="new-worker-endpoints-for-authenticated-client-media"><a class="header" href="#new-worker-endpoints-for-authenticated-client-media">New worker endpoints for authenticated client media</a></h2>
+<p><a href="./workers.html#synapseappmedia_repository">Media repository workers</a> handling
+Media APIs can now handle the following endpoint pattern:</p>
+<pre><code>^/_matrix/client/v1/media/.*$
+</code></pre>
+<p>Please update your reverse proxy configuration.</p>
 <h1 id="upgrading-to-v11060"><a class="header" href="#upgrading-to-v11060">Upgrading to v1.106.0</a></h1>
 <h2 id="minimum-supported-rust-version"><a class="header" href="#minimum-supported-rust-version">Minimum supported Rust version</a></h2>
 <p>The minimum supported Rust version has been increased from v1.65.0 to v1.66.0.
@@ -5439,9 +5446,10 @@ to download/operate on media.</p>
 <p>This will not prevent the listed domains from accessing media themselves.
 It simply prevents users on this server from downloading media originating
 from the listed servers.</p>
-<p>This will have no effect on media originating from the local server.
-This only affects media downloaded from other Matrix servers, to
-block domains from URL previews see <a href="usage/configuration/config_documentation.html#url_preview_url_blacklist"><code>url_preview_url_blacklist</code></a>.</p>
+<p>This will have no effect on media originating from the local server. This only
+affects media downloaded from other Matrix servers, to control URL previews see
+<a href="usage/configuration/config_documentation.html#url_preview_ip_range_blacklist"><code>url_preview_ip_range_blacklist</code></a> or
+<a href="usage/configuration/config_documentation.html#url_preview_url_blacklist"><code>url_preview_url_blacklist</code></a>.</p>
 <p>Defaults to an empty list (nothing blocked).</p>
 <p>Example configuration:</p>
 <pre><code class="language-yaml">prevent_media_downloads_from:
@@ -5567,12 +5575,14 @@ website only visible in your network. Defaults to none.</p>
 </code></pre>
 <hr />
 <h3 id="url_preview_url_blacklist"><a class="header" href="#url_preview_url_blacklist"><code>url_preview_url_blacklist</code></a></h3>
-<p>Optional list of URL matches that the URL preview spider is
-denied from accessing.  You should use <code>url_preview_ip_range_blacklist</code>
-in preference to this, otherwise someone could define a public DNS
-entry that points to a private IP address and circumvent the blacklist.
-This is more useful if you know there is an entire shape of URL that
-you know that will never want synapse to try to spider.</p>
+<p>Optional list of URL matches that the URL preview spider is denied from
+accessing.  This is a usability feature, not a security one. You should use
+<code>url_preview_ip_range_blacklist</code> in preference to this, otherwise someone could
+define a public DNS entry that points to a private IP address and circumvent
+the blacklist. Applications that perform redirects or serve different content
+when detecting that Synapse is accessing them can also bypass the blacklist.
+This is more useful if you know there is an entire shape of URL that you know
+that you do not want Synapse to preview.</p>
 <p>Each list entry is a dictionary of url component attributes as returned
 by urlparse.urlsplit as applied to the absolute form of the URL.  See
 <a href="https://docs.python.org/2/library/urlparse.html#urlparse.urlsplit">here</a> for more
@@ -11985,6 +11995,7 @@ worker_log_config: /etc/matrix-synapse/federation-sender-log.yaml
 <h3 id="synapseappmedia_repository"><a class="header" href="#synapseappmedia_repository"><code>synapse.app.media_repository</code></a></h3>
 <p>Handles the media repository. It can handle all endpoints starting with:</p>
 <pre><code>/_matrix/media/
+/_matrix/client/v1/media/
 </code></pre>
 <p>... and the following regular expressions matching media-specific administration APIs:</p>
 <pre><code>^/_synapse/admin/v1/purge_media_cache$
