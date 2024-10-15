@@ -271,7 +271,6 @@ For more details, see
 <p>Matrix.org provides Debian/Ubuntu packages of Synapse, for the amd64
 architecture via <a href="https://packages.matrix.org/debian/">https://packages.matrix.org/debian/</a>.</p>
 <p>To install the latest release:</p>
-<p>TODO UPDATE ALL THIS</p>
 <pre><code class="language-sh">sudo apt install -y lsb-release wget apt-transport-https
 sudo wget -O /usr/share/keyrings/matrix-org-archive-keyring.gpg https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg
 echo &quot;deb [signed-by=/usr/share/keyrings/matrix-org-archive-keyring.gpg] https://packages.matrix.org/debian/ $(lsb_release -cs) main&quot; |
@@ -445,7 +444,7 @@ sudo dnf group install &quot;Development Tools&quot;
 </code></pre>
 <h5 id="red-hat-enterprise-linux--rocky-linux"><a class="header" href="#red-hat-enterprise-linux--rocky-linux">Red Hat Enterprise Linux / Rocky Linux</a></h5>
 <p><em>Note: The term &quot;RHEL&quot; below refers to both Red Hat Enterprise Linux and Rocky Linux. The distributions are 1:1 binary compatible.</em></p>
-<p>It's recommended to use the latest Python versions. </p>
+<p>It's recommended to use the latest Python versions.</p>
 <p>RHEL 8 in particular ships with Python 3.6 by default which is EOL and therefore no longer supported by Synapse. RHEL 9 ship with Python 3.9 which is still supported by the Python core team as of this writing. However, newer Python versions provide significant performance improvements and they're available in official distributions' repositories. Therefore it's recommended to use them.</p>
 <p>Python 3.11 and 3.12 are available for both RHEL 8 and 9.</p>
 <p>These commands should be run as root user.</p>
@@ -465,7 +464,7 @@ dnf install python3.11 python3.11-devel
 dnf install python3.12 python3.12-devel
 </code></pre>
 <p>Finally, install common prerequisites</p>
-<pre><code class="language-bash">dnf install libicu libicu-devel libpq5 libpq5-devel lz4 pkgconf 
+<pre><code class="language-bash">dnf install libicu libicu-devel libpq5 libpq5-devel lz4 pkgconf
 dnf group install &quot;Development Tools&quot;
 </code></pre>
 <h6 id="using-venv-module-instead-of-virtualenv-command"><a class="header" href="#using-venv-module-instead-of-virtualenv-command">Using venv module instead of virtualenv command</a></h6>
@@ -474,7 +473,7 @@ dnf group install &quot;Development Tools&quot;
 <li>On RHEL 9, virtualenv is only available on <a href="https://docs.fedoraproject.org/en-US/epel/">EPEL</a>.</li>
 <li>On RHEL 8, virtualenv is based on Python 3.6. It does not support creating 3.11/3.12 virtual environments.</li>
 </ul>
-<p>Here's an example of creating Python 3.12 virtual environment and installing Synapse from PyPI. </p>
+<p>Here's an example of creating Python 3.12 virtual environment and installing Synapse from PyPI.</p>
 <pre><code class="language-bash">mkdir -p ~/synapse
 # To use Python 3.11, simply use the command &quot;python3.11&quot; instead.
 python3.12 -m venv ~/synapse/env
@@ -4491,6 +4490,15 @@ ownership. Defaults to &quot;[%(server_name)s] Validate your email&quot;</li>
     password_reset: &quot;[%(server_name)s] Password reset&quot;
     email_validation: &quot;[%(server_name)s] Validate your email&quot;
 </code></pre>
+<hr />
+<h3 id="max_event_delay_duration"><a class="header" href="#max_event_delay_duration"><code>max_event_delay_duration</code></a></h3>
+<p>The maximum allowed duration by which sent events can be delayed, as per
+<a href="https://github.com/matrix-org/matrix-spec-proposals/pull/4140">MSC4140</a>.
+Must be a positive value if set.</p>
+<p>Defaults to no duration (<code>null</code>), which disallows sending delayed events.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">max_event_delay_duration: 24h
+</code></pre>
 <h2 id="homeserver-blocking"><a class="header" href="#homeserver-blocking">Homeserver blocking</a></h2>
 <p>Useful options for Synapse admins.</p>
 <hr />
@@ -5007,7 +5015,7 @@ Please see the <a href="usage/configuration/config_documentation.html#config-con
 durations.</p>
 <ul>
 <li><code>max_cache_memory_usage</code> sets a ceiling on how much memory the cache can use before caches begin to be continuously evicted.
-They will continue to be evicted until the memory usage drops below the <code>target_memory_usage</code>, set in
+They will continue to be evicted until the memory usage drops below the <code>target_cache_memory_usage</code>, set in
 the setting below, or until the <code>min_cache_ttl</code> is hit. There is no default value for this option.</li>
 <li><code>target_cache_memory_usage</code> sets a rough target for the desired memory usage of the caches. There is no default value
 for this option.</li>
@@ -6974,6 +6982,8 @@ Supported algorithms are listed
 Required if <code>enabled</code> is set to true.</li>
 <li><code>subject_claim</code>: Name of the claim containing a unique identifier for the user.
 Optional, defaults to <code>sub</code>.</li>
+<li><code>display_name_claim</code>: Name of the claim containing the display name for the user. Optional.
+If provided, the display name will be set to the value of this claim upon first login.</li>
 <li><code>issuer</code>: The issuer to validate the &quot;iss&quot; claim against. Optional. If provided the
 &quot;iss&quot; claim will be required and validated for all JSON web tokens.</li>
 <li><code>audiences</code>: A list of audiences to validate the &quot;aud&quot; claim against. Optional.
@@ -6987,6 +6997,7 @@ validation will fail without configuring audiences.</li>
     secret: &quot;provided-by-your-issuer&quot;
     algorithm: &quot;provided-by-your-issuer&quot;
     subject_claim: &quot;name_of_claim&quot;
+    display_name_claim: &quot;name_of_claim&quot;
     issuer: &quot;provided-by-your-issuer&quot;
     audiences:
         - &quot;provided-by-your-issuer&quot;
@@ -7532,7 +7543,12 @@ Defaults to <code>true</code>.</p>
 by running a <a href="usage/configuration/../../workers.html#synapseappgeneric_worker"><code>generic_worker</code></a> and adding it's <a href="usage/configuration/config_documentation.html#worker_name"><code>worker_name</code></a> to
 a <code>federation_sender_instances</code> map. Doing so will remove handling of this function from
 the main process. Multiple workers can be added to this map, in which case the work is
-balanced across them.</p>
+balanced across them. </p>
+<p>The way that the load balancing works is any outbound federation request will be assigned 
+to a federation sender worker based on the hash of the destination server name. This
+means that all requests being sent to the same destination will be processed by the same
+worker instance. Multiple <code>federation_sender_instances</code> are useful if there is a federation
+with multiple servers.</p>
 <p>This configuration setting must be shared between all workers handling federation
 sending, and if changed all federation sender workers must be stopped at the same time
 and then started, to ensure that all instances are running with the same config (otherwise
@@ -7654,6 +7670,11 @@ localhost and 6379</p>
 <p><code>password</code>: Optional password if configured on the Redis instance.</p>
 </li>
 <li>
+<p><code>password_path</code>: Alternative to <code>password</code>, reading the password from an
+external file. The file should be a plain text file, containing only the
+password. Synapse reads the password from the given file once at startup.</p>
+</li>
+<li>
 <p><code>dbid</code>: Optional redis dbid if needs to connect to specific redis logical db.</p>
 </li>
 <li>
@@ -7673,6 +7694,7 @@ localhost and 6379</p>
 <p><em>Added in Synapse 1.78.0.</em></p>
 <p><em>Changed in Synapse 1.84.0: Added use_tls, certificate_file, private_key_file, ca_file and ca_path attributes</em></p>
 <p><em>Changed in Synapse 1.85.0: Added path option to use a local Unix socket</em></p>
+<p><em>Changed in Synapse 1.116.0: Added password_path</em></p>
 </li>
 </ul>
 <p>Example configuration:</p>
@@ -7680,7 +7702,8 @@ localhost and 6379</p>
   enabled: true
   host: localhost
   port: 6379
-  password: &lt;secret_password&gt;
+  password_path: &lt;path_to_the_password_file&gt;
+  # OR password: &lt;secret_password&gt;
   dbid: &lt;dbid&gt;
   #use_tls: True
   #certificate_file: &lt;path_to_the_certificate_file&gt;
@@ -10347,8 +10370,9 @@ this callback.</p>
 <p><em>Changed in Synapse v1.62.0: <code>synapse.module_api.NOT_SPAM</code> and <code>synapse.module_api.errors.Codes</code> can be returned by this callback. Returning a boolean is now deprecated.</em> </p>
 <pre><code class="language-python">async def user_may_invite(inviter: str, invitee: str, room_id: str) -&gt; Union[&quot;synapse.module_api.NOT_SPAM&quot;, &quot;synapse.module_api.errors.Codes&quot;, bool]
 </code></pre>
-<p>Called when processing an invitation. Both inviter and invitee are
-represented by their Matrix user ID (e.g. <code>@alice:example.com</code>).</p>
+<p>Called when processing an invitation, both when one is created locally or when
+receiving an invite over federation. Both inviter and invitee are represented by
+their Matrix user ID (e.g. <code>@alice:example.com</code>).</p>
 <p>The callback must return one of:</p>
 <ul>
 <li>
@@ -10382,7 +10406,9 @@ this callback.</p>
 ) -&gt; Union[&quot;synapse.module_api.NOT_SPAM&quot;, &quot;synapse.module_api.errors.Codes&quot;, bool]
 </code></pre>
 <p>Called when processing an invitation using a third-party identifier (also called a 3PID,
-e.g. an email address or a phone number). </p>
+e.g. an email address or a phone number). It is only called when a 3PID invite is created
+locally - not when one is received in a room over federation. If the 3PID is already associated
+with a Matrix ID, the spam check will go through the <code>user_may_invite</code> callback instead.</p>
 <p>The inviter is represented by their Matrix user ID (e.g. <code>@alice:example.com</code>), and the
 invitee is represented by its medium (e.g. &quot;email&quot;) and its address
 (e.g. <code>alice@example.com</code>). See <a href="https://matrix.org/docs/spec/appendices#pid-types">the Matrix specification</a>
@@ -11612,10 +11638,10 @@ recommend the use of <code>systemd</code> where available: for information on se
 <h2 id="start-synapse-with-poetry"><a class="header" href="#start-synapse-with-poetry">Start Synapse with Poetry</a></h2>
 <p>The following applies to Synapse installations that have been installed from source using <code>poetry</code>.</p>
 <p>You can start the main Synapse process with Poetry by running the following command:</p>
-<pre><code class="language-console">poetry run synapse_homeserver --config-file [your homeserver.yaml]
+<pre><code class="language-console">poetry run synapse_homeserver --config-path [your homeserver.yaml]
 </code></pre>
 <p>For worker setups, you can run the following command</p>
-<pre><code class="language-console">poetry run synapse_worker --config-file [your homeserver.yaml] --config-file [your worker.yaml]
+<pre><code class="language-console">poetry run synapse_worker --config-path [your homeserver.yaml] --config-path [your worker.yaml]
 </code></pre>
 <h2 id="available-worker-applications"><a class="header" href="#available-worker-applications">Available worker applications</a></h2>
 <h3 id="synapseappgeneric_worker"><a class="header" href="#synapseappgeneric_worker"><code>synapse.app.generic_worker</code></a></h3>
@@ -11720,6 +11746,7 @@ information.</p>
 </code></pre>
 <p>Additionally, the following REST endpoints can be handled for GET requests:</p>
 <pre><code>^/_matrix/client/(api/v1|r0|v3|unstable)/pushrules/
+^/_matrix/client/unstable/org.matrix.msc4140/delayed_events
 </code></pre>
 <p>Pagination requests can also be handled, but all requests for a given
 room must be routed to the same instance. Additionally, care must be taken to
@@ -16724,6 +16751,7 @@ can be done by installing the <code>libjemalloc2</code> package and adding this
 line to <code>/etc/default/matrix-synapse</code>:</p>
 <pre><code>LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2
 </code></pre>
+<p><em>Note</em>: You may need to set <code>PYTHONMALLOC=malloc</code> to ensure that <code>jemalloc</code> can accurately calculate memory usage. By default, Python uses its internal small-object allocator, which may interfere with jemalloc's ability to track memory consumption correctly. This could prevent the <a href="usage/administration/../configuration/config_documentation.html#caches-and-associated-values">cache_autotuning</a> feature from functioning as expected, as the Python allocator may not reach the memory threshold set by <code>max_cache_memory_usage</code>, thus not triggering the cache eviction process.</p>
 <p>This made a significant difference on Python 2.7 - it's unclear how
 much of an improvement it provides on Python 3.x.</p>
 <p>If you're encountering high CPU use by the Synapse process itself, you
