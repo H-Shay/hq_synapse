@@ -338,7 +338,7 @@ installing under virtualenv):</p>
 sudo pip install py-bcrypt
 </code></pre>
 <h4 id="alpine-linux"><a class="header" href="#alpine-linux">Alpine Linux</a></h4>
-<p>6543 maintains <a href="https://pkgs.alpinelinux.org/packages?name=synapse&amp;branch=edge">Synapse packages for Alpine Linux</a> in the community repository. Install with:</p>
+<p>Jahway603 maintains <a href="https://pkgs.alpinelinux.org/packages?name=synapse&amp;branch=edge">Synapse packages for Alpine Linux</a> in the community repository. Install with:</p>
 <pre><code class="language-sh">sudo apk add synapse
 </code></pre>
 <h4 id="void-linux"><a class="header" href="#void-linux">Void Linux</a></h4>
@@ -10618,7 +10618,7 @@ be used. If this happens, Synapse will not call any of the subsequent implementa
 this callback.</p>
 <h3 id="check_username_for_spam"><a class="header" href="#check_username_for_spam"><code>check_username_for_spam</code></a></h3>
 <p><em>First introduced in Synapse v1.37.0</em></p>
-<pre><code class="language-python">async def check_username_for_spam(user_profile: synapse.module_api.UserProfile) -&gt; bool
+<pre><code class="language-python">async def check_username_for_spam(user_profile: synapse.module_api.UserProfile, requester_id: str) -&gt; bool
 </code></pre>
 <p>Called when computing search results in the user directory. The module must return a
 <code>bool</code> indicating whether the given user should be excluded from user directory 
@@ -10634,6 +10634,7 @@ if this user has not set an avatar.</li>
 </ul>
 <p>The module is given a copy of the original dictionary, so modifying it from within the
 module cannot modify a user's profile when included in user directory search results.</p>
+<p>The requester_id parameter is the ID of the user that called the user directory API.</p>
 <p>If multiple modules implement this callback, they will be considered in order. If a
 callback returns <code>False</code>, Synapse falls through to the next one. The value of the first
 callback that does not return <code>False</code> will be used. If this happens, Synapse will not call
@@ -11816,23 +11817,19 @@ information.</p>
 ^/_matrix/client/(api/v1|r0|v3|unstable)/knock/
 ^/_matrix/client/(api/v1|r0|v3|unstable)/profile/
 
-# Account data requests
-^/_matrix/client/(r0|v3|unstable)/.*/tags
-^/_matrix/client/(r0|v3|unstable)/.*/account_data
-
-# Receipts requests
-^/_matrix/client/(r0|v3|unstable)/rooms/.*/receipt
-^/_matrix/client/(r0|v3|unstable)/rooms/.*/read_markers
-
-# Presence requests
-^/_matrix/client/(api/v1|r0|v3|unstable)/presence/
-
 # User directory search requests
 ^/_matrix/client/(r0|v3|unstable)/user_directory/search$
 </code></pre>
 <p>Additionally, the following REST endpoints can be handled for GET requests:</p>
 <pre><code>^/_matrix/client/(api/v1|r0|v3|unstable)/pushrules/
 ^/_matrix/client/unstable/org.matrix.msc4140/delayed_events
+
+# Account data requests
+^/_matrix/client/(r0|v3|unstable)/.*/tags
+^/_matrix/client/(r0|v3|unstable)/.*/account_data
+
+# Presence requests
+^/_matrix/client/(api/v1|r0|v3|unstable)/presence/
 </code></pre>
 <p>Pagination requests can also be handled, but all requests for a given
 room must be routed to the same instance. Additionally, care must be taken to
