@@ -977,7 +977,7 @@ reverse proxy is using.</p>
         proxy_pass http://localhost:8008;
         proxy_set_header X-Forwarded-For $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Host $host;
+        proxy_set_header Host $host:$server_port;
 
         # Nginx by default only allows file uploads up to 1M in size
         # Increase client_max_body_size to match max_upload_size defined in homeserver.yaml
@@ -1878,6 +1878,11 @@ database migrations are complete. You should wait until background updates from
 each upgrade are complete before moving on to the next upgrade, to avoid
 stacking them up. You can monitor the currently running background updates with
 <a href="usage/administration/admin_api/background_updates.html#status">the Admin API</a>.</p>
+<h1 id="upgrading-to-v11220"><a class="header" href="#upgrading-to-v11220">Upgrading to v1.122.0</a></h1>
+<h2 id="dropping-support-for-postgresql-11-and-12"><a class="header" href="#dropping-support-for-postgresql-11-and-12">Dropping support for PostgreSQL 11 and 12</a></h2>
+<p>In line with our <a href="deprecation_policy.html">deprecation policy</a>, we've dropped
+support for PostgreSQL 11 and 12, as they are no longer supported upstream.
+This release of Synapse requires PostgreSQL 13+.</p>
 <h1 id="upgrading-to-v11200"><a class="header" href="#upgrading-to-v11200">Upgrading to v1.120.0</a></h1>
 <h2 id="removal-of-experimental-msc3886-feature"><a class="header" href="#removal-of-experimental-msc3886-feature">Removal of experimental MSC3886 feature</a></h2>
 <p><a href="https://github.com/matrix-org/matrix-spec-proposals/pull/3886">MSC3886</a>
@@ -4416,8 +4421,11 @@ Synapse will refuse to connect unless the server supports STARTTLS.</p>
 </li>
 <li>
 <p><code>enable_tls</code>: By default, if the server supports TLS, it will be used, and the server
-must present a certificate that is valid for 'smtp_host'. If this option
+must present a certificate that is valid for <code>tlsname</code>. If this option
 is set to false, TLS will not be used.</p>
+</li>
+<li>
+<p><code>tlsname</code>: The domain name the SMTP server's TLS certificate must be valid for, defaulting to <code>smtp_host</code>.</p>
 </li>
 <li>
 <p><code>notif_from</code>: defines the &quot;From&quot; address to use when sending emails.
@@ -4501,6 +4509,7 @@ ownership. Defaults to &quot;[%(server_name)s] Validate your email&quot;</li>
   force_tls: true
   require_transport_security: true
   enable_tls: false
+  tlsname: mail.server.example.com
   notif_from: &quot;Your Friendly %(app)s homeserver &lt;noreply@example.com&gt;&quot;
   app_name: my_branded_matrix_server
   enable_notifs: true
