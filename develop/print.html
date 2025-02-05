@@ -5445,6 +5445,22 @@ from a single server. Defaults to 3.</li>
   concurrent: 5
 </code></pre>
 <hr />
+<h3 id="rc_presence"><a class="header" href="#rc_presence"><code>rc_presence</code></a></h3>
+<p>This option sets ratelimiting for presence.</p>
+<p>The <code>rc_presence.per_user</code> option sets rate limits on how often a specific
+users' presence updates are evaluated. Ratelimited presence updates sent via sync are
+ignored, and no error is returned to the client.
+This option also sets the rate limit for the
+<a href="https://spec.matrix.org/latest/client-server-api/#put_matrixclientv3presenceuseridstatus"><code>PUT /_matrix/client/v3/presence/{userId}/status</code></a>
+endpoint.</p>
+<p><code>per_user</code> defaults to <code>per_second: 0.1</code>, <code>burst_count: 1</code>.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">rc_presence:
+  per_user:
+    per_second: 0.05
+    burst_count: 0.5
+</code></pre>
+<hr />
 <h3 id="federation_rr_transactions_per_room_per_second"><a class="header" href="#federation_rr_transactions_per_room_per_second"><code>federation_rr_transactions_per_room_per_second</code></a></h3>
 <p>Sets outgoing federation transaction frequency for sending read-receipts,
 per-room.</p>
@@ -7661,6 +7677,10 @@ declared inside the <code>listener</code> block for a <code>replication</code> l
   worker1:
     host: localhost
     port: 8034
+  other:
+    host: localhost
+    port: 8035
+    tls: true
 </code></pre>
 <p>Example configuration(#2, for UNIX sockets):</p>
 <pre><code class="language-yaml">instance_map:
@@ -13854,6 +13874,12 @@ If the room does not define a type, the value will be <code>null</code>.</li>
 <p>The API is:</p>
 <pre><code>GET /_synapse/admin/v1/rooms/&lt;room_id&gt;/state
 </code></pre>
+<p><strong>Parameters</strong></p>
+<p>The following query parameter is available:</p>
+<ul>
+<li><code>type</code> - The type of room state event to filter by, eg &quot;m.room.create&quot;. If provided, only state events
+of this type will be returned (regardless of their <code>state_key</code> value).</li>
+</ul>
 <p>A response body like the following is returned:</p>
 <pre><code class="language-json">{
   &quot;state&quot;: [
