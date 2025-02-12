@@ -442,20 +442,12 @@ header files for Python C extensions.</p>
                  libicu-devel
 sudo dnf group install &quot;Development Tools&quot;
 </code></pre>
-<h5 id="red-hat-enterprise-linux--rocky-linux"><a class="header" href="#red-hat-enterprise-linux--rocky-linux">Red Hat Enterprise Linux / Rocky Linux</a></h5>
-<p><em>Note: The term &quot;RHEL&quot; below refers to both Red Hat Enterprise Linux and Rocky Linux. The distributions are 1:1 binary compatible.</em></p>
+<h5 id="red-hat-enterprise-linux--rocky-linux--oracle-linux"><a class="header" href="#red-hat-enterprise-linux--rocky-linux--oracle-linux">Red Hat Enterprise Linux / Rocky Linux / Oracle Linux</a></h5>
+<p><em>Note: The term &quot;RHEL&quot; below refers to Red Hat Enterprise Linux, Oracle Linux and Rocky Linux. The distributions are 1:1 binary compatible.</em></p>
 <p>It's recommended to use the latest Python versions.</p>
-<p>RHEL 8 in particular ships with Python 3.6 by default which is EOL and therefore no longer supported by Synapse. RHEL 9 ship with Python 3.9 which is still supported by the Python core team as of this writing. However, newer Python versions provide significant performance improvements and they're available in official distributions' repositories. Therefore it's recommended to use them.</p>
+<p>RHEL 8 in particular ships with Python 3.6 by default which is EOL and therefore no longer supported by Synapse. RHEL 9 ships with Python 3.9 which is still supported by the Python core team as of this writing. However, newer Python versions provide significant performance improvements and they're available in official distributions' repositories. Therefore it's recommended to use them.</p>
 <p>Python 3.11 and 3.12 are available for both RHEL 8 and 9.</p>
 <p>These commands should be run as root user.</p>
-<p>RHEL 8</p>
-<pre><code class="language-bash"># Enable PowerTools repository
-dnf config-manager --set-enabled powertools
-</code></pre>
-<p>RHEL 9</p>
-<pre><code class="language-bash"># Enable CodeReady Linux Builder repository
-crb enable
-</code></pre>
 <p>Install new version of Python. You only need one of these:</p>
 <pre><code class="language-bash"># Python 3.11
 dnf install python3.11 python3.11-devel
@@ -3966,6 +3958,38 @@ lowercase and may contain an explicit port.</p>
 <pre><code class="language-yaml">pid_file: DATADIR/homeserver.pid
 </code></pre>
 <hr />
+<h3 id="daemonize"><a class="header" href="#daemonize"><code>daemonize</code></a></h3>
+<p>Specifies whether Synapse should be started as a daemon process. If Synapse is being
+managed by <a href="usage/configuration/../../systemd-with-workers/">systemd</a>, this option must be omitted or set to
+<code>false</code>.</p>
+<p>This can also be set by the <code>--daemonize</code> (<code>-D</code>) argument when starting Synapse.</p>
+<p>See <code>worker_daemonize</code> for more information on daemonizing workers.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">daemonize: true
+</code></pre>
+<hr />
+<h3 id="print_pidfile"><a class="header" href="#print_pidfile"><code>print_pidfile</code></a></h3>
+<p>Print the path to the pidfile just before daemonizing. Defaults to false.</p>
+<p>This can also be set by the <code>--print-pidfile</code> argument when starting Synapse.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">print_pidfile: true
+</code></pre>
+<hr />
+<h3 id="user_agent_suffix"><a class="header" href="#user_agent_suffix"><code>user_agent_suffix</code></a></h3>
+<p>A suffix that is appended to the Synapse user-agent (ex. <code>Synapse/v1.123.0</code>). Defaults
+to None</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">user_agent_suffix: &quot; (I'm a teapot; Linux x86_64)&quot;
+</code></pre>
+<hr />
+<h3 id="use_frozen_dicts"><a class="header" href="#use_frozen_dicts"><code>use_frozen_dicts</code></a></h3>
+<p>Determines whether we should freeze the internal dict object in <code>FrozenEvent</code>. Freezing
+prevents bugs where we accidentally share e.g. signature dicts. However, freezing a
+dict is expensive. Defaults to false.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">use_frozen_dicts: true
+</code></pre>
+<hr />
 <h3 id="web_client_location"><a class="header" href="#web_client_location"><code>web_client_location</code></a></h3>
 <p>The absolute URL to the web client which <code>/</code> will redirect to. Defaults to none.</p>
 <p>Example configuration:</p>
@@ -4345,6 +4369,13 @@ for <a href="usage/configuration/../../workers.html">workers</a> and containers 
     type: http
     resources:
       - names: [client, federation]
+</code></pre>
+<hr />
+<h3 id="manhole"><a class="header" href="#manhole"><code>manhole</code></a></h3>
+<p>Turn on the Twisted telnet manhole service on the given port. Defaults to none.</p>
+<p>This can also be set by the <code>--manhole</code> argument when starting Synapse.</p>
+<p>Example configuration:</p>
+<pre><code class="language-yaml">manhole: 1234
 </code></pre>
 <hr />
 <h3 id="manhole_settings"><a class="header" href="#manhole_settings"><code>manhole_settings</code></a></h3>
@@ -6587,7 +6618,8 @@ The default is 'uid'.</li>
 <li><code>attribute_requirements</code>: It is possible to configure Synapse to only allow logins if SAML attributes
 match particular values. The requirements can be listed under
 <code>attribute_requirements</code> as shown in the example. All of the listed attributes must
-match for the login to be permitted.</li>
+match for the login to be permitted. Values can be specified in a <code>one_of</code> list to allow
+multiple values for an attribute.</li>
 <li><code>idp_entityid</code>: If the metadata XML contains multiple IdP entities then the <code>idp_entityid</code>
 option must be set to the entity to redirect users to.
 Most deployments only have a single IdP entity and so should omit this option.</li>
@@ -6665,7 +6697,9 @@ the IdP to use an ACS location of
     - attribute: userGroup
       value: &quot;staff&quot;
     - attribute: department
-      value: &quot;sales&quot;
+      one_of:
+        - &quot;sales&quot;
+        - &quot;admins&quot;
 
   idp_entityid: 'https://our_idp/entityid'
 </code></pre>
