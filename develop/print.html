@@ -1881,6 +1881,17 @@ following to the config:</p>
 <pre><code class="language-yaml">room_list_publication_rules:
   - &quot;action&quot;: &quot;allow&quot;
 </code></pre>
+<h2 id="change-of-signing-key-expiry-date-for-the-debianubuntu-package-repository"><a class="header" href="#change-of-signing-key-expiry-date-for-the-debianubuntu-package-repository">Change of signing key expiry date for the Debian/Ubuntu package repository</a></h2>
+<p>Administrators using the Debian/Ubuntu packages from <code>packages.matrix.org</code>,
+please be aware that we have recently updated the expiry date on the repository's GPG signing key,
+but this change must be imported into your keyring.</p>
+<p>If you have the <code>matrix-org-archive-keyring</code> package installed and it updates before the current key expires, this should
+happen automatically.</p>
+<p>Otherwise, if you see an error similar to <code>The following signatures were invalid: EXPKEYSIG F473DD4473365DE1</code>, you
+will need to get a fresh copy of the keys. You can do so with:</p>
+<pre><code class="language-sh">sudo wget -O /usr/share/keyrings/matrix-org-archive-keyring.gpg https://packages.matrix.org/debian/matrix-org-archive-keyring.gpg
+</code></pre>
+<p>The old version of the key will expire on <code>2025-03-15</code>.</p>
 <h1 id="upgrading-to-v11220"><a class="header" href="#upgrading-to-v11220">Upgrading to v1.122.0</a></h1>
 <h2 id="dropping-support-for-postgresql-11-and-12"><a class="header" href="#dropping-support-for-postgresql-11-and-12">Dropping support for PostgreSQL 11 and 12</a></h2>
 <p>In line with our <a href="deprecation_policy.html">deprecation policy</a>, we've dropped
@@ -9272,7 +9283,7 @@ URLs are all things that can be mapped from talking to a SSO service.</p>
 to turn that into a displayname when creating a Matrix user for this individual.
 It may choose <code>John Smith</code>, or <code>Smith, John [Example.com]</code> or any number of
 variations. As each Synapse configuration may want something different, this is
-where SAML mapping providers come into play.</p>
+where SSO mapping providers come into play.</p>
 <p>SSO mapping providers are currently supported for OpenID and SAML SSO
 configurations. Please see the details below for how to implement your own.</p>
 <p>It is up to the mapping provider whether the user should be assigned a predefined
@@ -11964,7 +11975,7 @@ information.</p>
 ^/_matrix/client/(r0|v3|unstable)/keys/changes$
 ^/_matrix/client/(r0|v3|unstable)/keys/claim$
 ^/_matrix/client/(r0|v3|unstable)/room_keys/
-^/_matrix/client/(r0|v3|unstable)/keys/upload/
+^/_matrix/client/(r0|v3|unstable)/keys/upload$
 
 # Registration/login requests
 ^/_matrix/client/(api/v1|r0|v3|unstable)/login$
@@ -17122,7 +17133,7 @@ so in this case it makes sense to start with a clean database.
 <p>Using the following curl command:</p>
 <pre><code class="language-console">curl -H 'Authorization: Bearer &lt;access-token&gt;' -X DELETE https://matrix.org/_matrix/client/r0/directory/room/&lt;room-alias&gt;
 </code></pre>
-<p><code>&lt;access-token&gt;</code> - can be obtained in riot by looking in the riot settings, down the bottom is:
+<p><code>&lt;access-token&gt;</code> - can be obtained in element by looking in All settings, clicking Help &amp; About and down the bottom is:
 Access Token:&lt;click to reveal&gt;</p>
 <p><code>&lt;room-alias&gt;</code> - the room alias, eg. #my_room:matrix.org this possibly needs to be URL encoded also, for example  %23my_room%3Amatrix.org</p>
 <h2 id="how-can-i-find-the-lines-corresponding-to-a-given-http-request-in-my-homeserver-log"><a class="header" href="#how-can-i-find-the-lines-corresponding-to-a-given-http-request-in-my-homeserver-log">How can I find the lines corresponding to a given HTTP request in my homeserver log?</a></h2>
@@ -18505,6 +18516,24 @@ $ poetry shell
 # Install everything again
 $ poetry install --extras all
 </code></pre>
+<p>If you want to go even further and remove the Poetry caches:</p>
+<pre><code class="language-shell"># Find your Poetry cache directory
+# Docs: https://github.com/python-poetry/poetry/blob/main/docs/configuration.md#cache-directory
+$ poetry config cache-dir
+
+# Remove packages from all cached repositories
+$ poetry cache clear --all .
+
+# Go completely nuclear and clear out everything Poetry cache related
+# including the wheel artifacts which is not covered by the above command
+# (see https://github.com/python-poetry/poetry/issues/10304)
+#
+# This is necessary in order to rebuild or fetch new wheels. For example, if you update
+# the `icu` library in on your system, you will need to rebuild the PyICU Python package
+# in order to incorporate the correct dynamically linked library locations otherwise you
+# will run into errors like: `ImportError: libicui18n.so.75: cannot open shared object file: No such file or directory`
+$ rm -rf $(poetry config cache-dir)
+</code></pre>
 <h2 id="run-a-command-in-the-poetry-virtualenv"><a class="header" href="#run-a-command-in-the-poetry-virtualenv">...run a command in the <code>poetry</code> virtualenv?</a></h2>
 <p>Use <code>poetry run cmd args</code> when you need the python virtualenv context.
 To avoid typing <code>poetry run</code> all the time, you can run  <code>poetry shell</code>
@@ -18533,7 +18562,7 @@ useful.</p>
 <h2 id="add-a-new-dependency"><a class="header" href="#add-a-new-dependency">...add a new dependency?</a></h2>
 <p>Either:</p>
 <ul>
-<li>manually update <code>pyproject.toml</code>; then <code>poetry lock --no-update</code>; or else</li>
+<li>manually update <code>pyproject.toml</code>; then <code>poetry lock</code>; or else</li>
 <li><code>poetry add packagename</code>. See <code>poetry add --help</code>; note the <code>--dev</code>,
 <code>--extras</code> and <code>--optional</code> flags in particular.</li>
 </ul>
@@ -18543,10 +18572,10 @@ useful.</p>
 <pre><code class="language-shell">poetry remove packagename
 </code></pre>
 <p>ought to do the trick. Alternatively, manually update <code>pyproject.toml</code> and
-<code>poetry lock --no-update</code>. Include the updated <code>pyproject.toml</code> and <code>poetry.lock</code>
+<code>poetry lock</code>. Include the updated <code>pyproject.toml</code> and <code>poetry.lock</code>
 files in your commit.</p>
 <h2 id="update-the-version-range-for-an-existing-dependency"><a class="header" href="#update-the-version-range-for-an-existing-dependency">...update the version range for an existing dependency?</a></h2>
-<p>Best done by manually editing <code>pyproject.toml</code>, then <code>poetry lock --no-update</code>.
+<p>Best done by manually editing <code>pyproject.toml</code>, then <code>poetry lock</code>.
 Include the updated <code>pyproject.toml</code> and <code>poetry.lock</code> in your commit.</p>
 <h2 id="update-a-dependency-in-the-locked-environment"><a class="header" href="#update-a-dependency-in-the-locked-environment">...update a dependency in the locked environment?</a></h2>
 <p>Use</p>
@@ -18564,7 +18593,7 @@ affecting the broad dependencies listed in the wheel.</p>
 
 # Get poetry to recompute the content-hash of pyproject.toml without changing
 # the locked package versions.
-poetry lock --no-update
+poetry lock
 </code></pre>
 <p>Either way, include the updated <code>poetry.lock</code> file in your commit.</p>
 <h2 id="export-a-requirementstxt-file"><a class="header" href="#export-a-requirementstxt-file">...export a <code>requirements.txt</code> file?</a></h2>
