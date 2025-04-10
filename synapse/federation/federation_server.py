@@ -696,12 +696,21 @@ class FederationServer(FederationBase):
         pdu = event_from_pdu_json(content, room_version)
         origin_host, _ = parse_server_name(origin)
         await self.check_server_matches_acl(origin_host, pdu.room_id)
+        if await self._spam_checker_module_callbacks.should_drop_federated_event(
+            pdu
+        ):
+            logger.info(
+                "Federated event contains spam, dropping %s",
+                pdu.event_id,
+            )
+            raise SynapseError(403, Codes.FORBIDDEN)
         try:
             pdu = await self._check_sigs_and_hash(room_version, pdu)
         except InvalidEventSignatureError as e:
             errmsg = f"event id {pdu.event_id}: {e}"
             logger.warning("%s", errmsg)
             raise SynapseError(403, errmsg, Codes.FORBIDDEN)
+
         ret_pdu = await self.handler.on_invite_request(origin, pdu, room_version)
         time_now = self._clock.time_msec()
         return {"event": ret_pdu.get_pdu_json(time_now)}
