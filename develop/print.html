@@ -7367,6 +7367,9 @@ If set to true, local users are more likely to appear above remote users when se
 user directory. Defaults to false.</p>
 </li>
 <li>
+<p><code>exclude_remote_users</code>: If set to true, the search will only return local users. Defaults to false.</p>
+</li>
+<li>
 <p><code>show_locked_users</code>: Defines whether to show locked users in search query results. Defaults to false.</p>
 </li>
 </ul>
@@ -7375,6 +7378,7 @@ user directory. Defaults to false.</p>
     enabled: false
     search_all_users: true
     prefer_local_users: true
+    exclude_remote_users: false
     show_locked_users: true
 </code></pre>
 <hr />
@@ -10920,6 +10924,7 @@ doing.</strong></p>
 callback returns <code>False</code>, Synapse falls through to the next one. The value of the first
 callback that does not return <code>False</code> will be used. If this happens, Synapse will not call
 any of the subsequent implementations of this callback.</p>
+<p>Note that this check is applied to federation invites as of Synapse v1.130.0.</p>
 <h3 id="check_login_for_spam"><a class="header" href="#check_login_for_spam"><code>check_login_for_spam</code></a></h3>
 <p><em>First introduced in Synapse v1.87.0</em></p>
 <pre><code class="language-python">async def check_login_for_spam(
@@ -12074,6 +12079,14 @@ using):</p>
 For multiple workers not handling the SSO endpoints properly, see
 <a href="https://github.com/matrix-org/synapse/issues/7530">#7530</a> and
 <a href="https://github.com/matrix-org/synapse/issues/9427">#9427</a>.</p>
+<p>Additionally, when MSC3861 is enabled (<code>experimental_features.msc3861.enabled</code>
+set to <code>true</code>), the following endpoints can be handled by the worker:</p>
+<pre><code>^/_synapse/admin/v2/users/[^/]+$
+^/_synapse/admin/v1/username_available$
+^/_synapse/admin/v1/users/[^/]+/_allow_cross_signing_replacement_without_uia$
+# Only the GET method:
+^/_synapse/admin/v1/users/[^/]+/devices$
+</code></pre>
 <p>Note that a <a href="usage/configuration/config_documentation.html#listeners">HTTP listener</a>
 with <code>client</code> and <code>federation</code> <code>resources</code> must be configured in the
 <a href="usage/configuration/config_documentation.html#worker_listeners"><code>worker_listeners</code></a>
